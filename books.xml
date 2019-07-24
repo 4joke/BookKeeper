@@ -1,0 +1,10 @@
+<books>
+    <book>
+        <title>Война и Мир</title>
+        <autor>Лев Толстой</autor>
+    </book>
+    <book>
+        <title>Преступление и наказание</title>
+        <autor>Раскольников</autor>
+    </book>
+</books>
