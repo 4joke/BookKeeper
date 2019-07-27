@@ -42,17 +42,18 @@ def storeindb(books):
         c.execute("CREATE TABLE IF NOT EXISTS BOOKS (title text, autor text, isRead int, created text, updated text)")
         row = c.execute('SELECT rowid, title, autor, isRead FROM BOOKS WHERE title = ? and autor = ?',
                         (book.title, book.autor)).fetchone()
-        if len(row) > 0:
-            result = tuple(row)
-            if result[3] == book.read:
-                print('Book with title = \'%s\' and autor = \'%s\' and isRead = %s already exists!' % (book.title, book.autor, book.read))
-            else:
-                c.execute('UPDATE BOOKS SET isRead = ? where rowid = ?', (book.read, result[0]))
-                print("Book with title = \'%s\' and autor = \'%s\' was updated!" % (book.title, book.autor))
-        else:
+        if row is None:
             c.execute('INSERT INTO BOOKS VALUES(?, ?, ?, ?, NULL)',
                       (book.title, book.autor, 0, date))
             print("Book(title = %s, autor = %s, read = %s was stored!)" % (book.title, book.autor, book.read))
+        elif len(row) > 0:
+            result = tuple(row)
+            if result[3] == book.read:
+                print('Book with title = \'%s\' and autor = \'%s\' and isRead = %s already exists!'
+                      % (book.title, book.autor, book.read))
+            else:
+                c.execute('UPDATE BOOKS SET isRead = ? where rowid = ?', (book.read, result[0]))
+                print("Book with title = \'%s\' and autor = \'%s\' was updated!" % (book.title, book.autor))
     conn.commit()
     conn.close()
 
