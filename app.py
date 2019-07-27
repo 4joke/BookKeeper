@@ -3,7 +3,6 @@ import xml.etree.ElementTree as eT
 import argparse
 import sqlite3
 import datetime as d
-import logging
 
 
 class Book:
@@ -18,8 +17,6 @@ parser.add_argument("--add", help="add books to library. Should point to xml fil
 parser.add_argument("--getAll", help="get all stored books", type=bool)
 parser.add_argument("--getRead", help="get all stored books that were reading", type=str)
 args = parser.parse_args()
-logger = logging.getLogger("app")
-logger.setLevel(logging.DEBUG)
 conn = sqlite3.connect("booksLIb.db")
 
 
@@ -61,7 +58,6 @@ def storeindb(books):
 def getallbooks():
     c = conn.cursor()
     for row in c.execute("SELECT rowid, * FROM BOOKS"):
-        logger.debug(row)
         print(row)
 
 
