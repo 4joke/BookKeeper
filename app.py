@@ -22,11 +22,21 @@ class Book:
         print("Book(title = %s, autor = %s, read = %s was stored!)" % (self.title, self.autor, self.read))
         self.connection.commit()
 
+    def update(self, rowid):
+        self.cursor.execute('UPDATE BOOKS SET isRead = ?, updated = ? where rowid = ?', (self.read, self.date, rowid))
+        print("Book with title = \'%s\' and autor = \'%s\' was updated!" % (self.title, self.autor))
+        self.connection.commit()
+
+    @staticmethod
+    def close():
+        Book.connection.close()
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--add", help="add books to library. Should point to xml file's location with books", type=str)
-parser.add_argument("--getAll", help="get all stored books", type=bool)
-parser.add_argument("--getRead", help="get all stored books that were reading", type=str)
+parser.add_argument("--get", help="get all stored books", nargs='?', const=True, type=bool)
+parser.add_argument("--read", help="get all stored books that were read", nargs='?', type=bool, const=True)
+parser.add_argument("--unread", help="get all stored books that were unread", nargs='?', type=bool, const=True)
 args = parser.parse_args()
 conn = sqlite3.connect("booksLIb.db")
 
@@ -57,10 +67,8 @@ def storeindb(books):
                 print('Book with title = \'%s\' and autor = \'%s\' and isRead = %s already exists!'
                       % (book.title, book.autor, book.read))
             else:
-                c.execute('UPDATE BOOKS SET isRead = ? where rowid = ?', (book.read, result[0]))
-                print("Book with title = \'%s\' and autor = \'%s\' was updated!" % (book.title, book.autor))
-    conn.commit()
-    conn.close()
+                book.update(result[0])
+    Book.close()
 
 
 def getallbooks():
@@ -78,10 +86,10 @@ def search(read):
 
 if args.add:
     readfromfile(args.add)
-if args.getAll:
+if args.get:
     getallbooks()
-if args.getRead:
-    if args.getRead == 'true':
-        search(1)
-    elif args.getRead == 'false':
-        search(0)
+if args.read:
+    search(1)
+elif args.unread:
+    search(0)
+
