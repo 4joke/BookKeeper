@@ -22,7 +22,10 @@ class Book:
         print("Book(title = %s, autor = %s, read = %s was stored!)" % (self.title, self.autor, self.read))
         self.connection.commit()
 
-    def update(self, rowid):
+    def update(self):
+        row = self.cursor.execute('SELECT rowid, title, autor, isRead FROM BOOKS WHERE title = ? and autor = ?',
+                                  (self.title, self.autor)).fetchone()
+        rowid = tuple(row)[0]
         self.cursor.execute('UPDATE BOOKS SET isRead = ?, updated = ? where rowid = ?', (self.read, self.date, rowid))
         print("Book with title = \'%s\' and autor = \'%s\' was updated!" % (self.title, self.autor))
         self.connection.commit()
@@ -34,6 +37,7 @@ class Book:
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--add", help="add books to library. Should point to xml file's location with books", type=str)
+parser.add_argument("--update", help="update books in the library. Should point to xml file's location with books", type=str)
 parser.add_argument("--get", help="get all stored books", nargs='?', const=True, type=bool)
 parser.add_argument("--read", help="get all stored books that were read", nargs='?', type=bool, const=True)
 parser.add_argument("--unread", help="get all stored books that were unread", nargs='?', type=bool, const=True)
@@ -49,7 +53,7 @@ def readfromfile(location):
         autor = elem.find('autor').text
         read = int(elem.find('read').text) if (elem.find('read') is not None) else 0
         books.append(Book(title, autor, read))
-    storeindb(books)
+    return books
 
 
 def storeindb(books):
@@ -61,13 +65,8 @@ def storeindb(books):
                         (book.title, book.autor)).fetchone()
         if row is None:
             book.store()
-        elif len(row) > 0:
-            result = tuple(row)
-            if result[3] == book.read:
-                print('Book with title = \'%s\' and autor = \'%s\' and isRead = %s already exists!'
-                      % (book.title, book.autor, book.read))
-            else:
-                book.update(result[0])
+        else:
+            print('Book with title = \'%s\' and autor = \'%s\' already exists!' % (book.title, book.autor))
     Book.close()
 
 
@@ -85,11 +84,15 @@ def search(read):
 
 
 if args.add:
-    readfromfile(args.add)
-if args.get:
+    books = readfromfile(args.add)
+    storeindb(books)
+elif args.update:
+    books = readfromfile(args.update)
+    for book in books:
+        book.update()
+elif args.get:
     getallbooks()
-if args.read:
+elif args.read:
     search(1)
 elif args.unread:
     search(0)
-
