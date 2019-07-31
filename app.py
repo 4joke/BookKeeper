@@ -6,10 +6,21 @@ import datetime as d
 
 
 class Book:
+    connection = sqlite3.connect("booksLIb.db")
+    connection.row_factory = sqlite3.Row
+    cursor = connection.cursor()
+
     def __init__(self, title, autor, read):
         self.title = title
         self.autor = autor
         self.read = read
+        self.date = d.datetime.now().strftime("%y-%m-%d %H:%M:S")
+
+    def store(self):
+        self.cursor.execute('INSERT INTO BOOKS VALUES(?, ?, ?, ?, NULL)',
+                            (self.title, self.autor, 0, self.date))
+        print("Book(title = %s, autor = %s, read = %s was stored!)" % (self.title, self.autor, self.read))
+        self.connection.commit()
 
 
 parser = argparse.ArgumentParser()
@@ -35,14 +46,11 @@ def storeindb(books):
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
     for book in books:
-        date = d.datetime.now().strftime("%y-%m-%d %H:%M:S")
         c.execute("CREATE TABLE IF NOT EXISTS BOOKS (title text, autor text, isRead int, created text, updated text)")
         row = c.execute('SELECT rowid, title, autor, isRead FROM BOOKS WHERE title = ? and autor = ?',
                         (book.title, book.autor)).fetchone()
         if row is None:
-            c.execute('INSERT INTO BOOKS VALUES(?, ?, ?, ?, NULL)',
-                      (book.title, book.autor, 0, date))
-            print("Book(title = %s, autor = %s, read = %s was stored!)" % (book.title, book.autor, book.read))
+            book.store()
         elif len(row) > 0:
             result = tuple(row)
             if result[3] == book.read:
