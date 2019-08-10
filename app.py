@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import xml.etree.ElementTree as eT
+from lxml import etree as et
 import argparse
 import sqlite3
 import datetime as d
@@ -38,7 +38,8 @@ class Book:
 parser = argparse.ArgumentParser()
 parser.add_argument("--add", help="add books to library. Should point to xml file's location with books", type=str)
 parser.add_argument("--update", help="update books in the library. Should point to xml file's location with books", type=str)
-parser.add_argument("--get", help="get all stored books", nargs='?', const=True, type=bool)
+parser.add_argument("--print", help="get all stored books", nargs='?', const=True, type=bool)
+parser.add_argument("--unload", help="unload all stored books", nargs='?', const=True, type=bool)
 parser.add_argument("--read", help="get all stored books that were read", nargs='?', type=bool, const=True)
 parser.add_argument("--unread", help="get all stored books that were unread", nargs='?', type=bool, const=True)
 args = parser.parse_args()
@@ -47,7 +48,7 @@ conn = sqlite3.connect("booksLIb.db")
 
 def readfromfile(location):
     books = []
-    tree = eT.parse(location)
+    tree = et.parse(location)
     for elem in tree.getroot():
         title = elem.find('title').text
         autor = elem.find('autor').text
@@ -83,6 +84,20 @@ def search(read):
         print("\ttitle = %s, autor = %s" % (tuple(r)[0], tuple(r)[1]))
 
 
+def unload():
+    root = et.Element("books")
+    c = conn.cursor()
+    for row in c.execute("select title, autor, isRead from books"):
+        elem = tuple(row)
+        bookElem = et.SubElement(root, "book")
+        book = Book(elem[0], elem[1], elem[2])
+        et.SubElement(bookElem, "title").text = book.title
+        et.SubElement(bookElem, "autor").text = book.autor
+        et.SubElement(bookElem, "read").text = str(book.read)
+    tree = et.ElementTree(root)
+    tree.write("storedBooks.xml", pretty_print=True, encoding='UTF-8')
+
+
 if args.add:
     books = readfromfile(args.add)
     storeindb(books)
@@ -90,9 +105,11 @@ elif args.update:
     books = readfromfile(args.update)
     for book in books:
         book.update()
-elif args.get:
+elif args.print:
     getallbooks()
 elif args.read:
     search(1)
 elif args.unread:
     search(0)
+elif args.unload:
+    unload()
