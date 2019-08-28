@@ -19,7 +19,7 @@ class Book:
     def store(self):
         self.cursor.execute('INSERT INTO BOOKS VALUES(?, ?, ?, ?, NULL)',
                             (self.title, self.autor, 0, self.date))
-        print("Book(title = %s, autor = %s, read = %s was stored!)" % (self.title, self.autor, self.read))
+        print("Book(title = %s, autor = %s, read = %s was successfully stored!)" % (self.title, self.autor, self.read))
         self.connection.commit()
 
     def update(self):
@@ -27,7 +27,12 @@ class Book:
                                   (self.title, self.autor)).fetchone()
         rowid = tuple(row)[0]
         self.cursor.execute('UPDATE BOOKS SET isRead = ?, updated = ? where rowid = ?', (self.read, self.date, rowid))
-        print("Book with title = \'%s\' and autor = \'%s\' was updated!" % (self.title, self.autor))
+        print("Book with title = \'%s\' and autor = \'%s\' was successfully updated!" % (self.title, self.autor))
+        self.connection.commit()
+
+    def delete(self):
+        self.cursor.execute('DELETE FROM BOOKS WHERE title = ? and autor = ?', (self.title, self.autor))
+        print("Book(title = %s, autor = %s was successfully deleted!)" % (self.title, self.autor))
         self.connection.commit()
 
     @staticmethod
@@ -42,6 +47,7 @@ parser.add_argument("--print", help="get all stored books", nargs='?', const=Tru
 parser.add_argument("--unload", help="unload all stored books", nargs='?', const=True, type=bool)
 parser.add_argument("--read", help="get all stored books that were read", nargs='?', type=bool, const=True)
 parser.add_argument("--unread", help="get all stored books that were unread", nargs='?', type=bool, const=True)
+parser.add_argument("--delete", help="delete given books. Should point to xml file's location with books", type=str)
 args = parser.parse_args()
 conn = sqlite3.connect("booksLIb.db")
 
@@ -105,6 +111,12 @@ elif args.update:
     books = readfromfile(args.update)
     for book in books:
         book.update()
+    Book.close()
+elif args.delete:
+    books = readfromfile(args.delete)
+    for book in books:
+        book.delete()
+    Book.close()
 elif args.print:
     getallbooks()
 elif args.read:
@@ -113,3 +125,4 @@ elif args.unread:
     search(0)
 elif args.unload:
     unload()
+    
