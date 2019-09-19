@@ -79,7 +79,7 @@ def getallbooks():
 
 def search(read):
     conn.row_factory = sqlite3.Row
-    row = conn.execute("select title, autor from books where isRead = %s" % read)
+    row = conn.execute("select title, autor from books where isRead = %s order by title" % read)
     for r in row.fetchall():
         print("\ttitle = %s, autor = %s" % (tuple(r)[0], tuple(r)[1]))
 
