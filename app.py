@@ -87,7 +87,7 @@ def search(read):
 def unload():
     root = et.Element("books")
     c = conn.cursor()
-    for row in c.execute("select title, autor, isRead from books"):
+    for row in c.execute("select title, autor, isRead from books order by title"):
         elem = tuple(row)
         bookElem = et.SubElement(root, "book")
         book = Book(elem[0], elem[1], elem[2])
