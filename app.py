@@ -18,9 +18,17 @@ class Book:
 
     def store(self):
         self.cursor.execute('INSERT INTO BOOKS VALUES(?, ?, ?, ?, NULL)',
-                            (self.title, self.autor, 0, self.date))
+                            (self.title, self.autor, self.read, self.date))
         print("Book(title = %s, autor = %s, read = %s was successfully stored!)" % (self.title, self.autor, self.read))
         self.connection.commit()
+
+    def find(self):
+        row = self.cursor.execute('SELECT rowid, title, autor, isRead FROM BOOKS WHERE title = ? and autor = ? and isRead = ?',
+                                  (self.title, self.autor, self.read)).fetchone()
+        if row is not None:
+            return True
+        else:
+            return False
 
     def update(self):
         row = self.cursor.execute('SELECT rowid, title, autor, isRead FROM BOOKS WHERE title = ? and autor = ?',
@@ -110,7 +118,8 @@ if args.add:
 elif args.update:
     books = readfromfile(args.update)
     for book in books:
-        book.update()
+        if not book.find():
+            book.update()
     Book.close()
 elif args.delete:
     books = readfromfile(args.delete)
@@ -125,4 +134,3 @@ elif args.unread:
     search(0)
 elif args.unload:
     unload()
-    
