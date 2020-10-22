@@ -16,12 +16,6 @@ class Book:
         self.read = read
         self.date = d.datetime.now().strftime("%y-%m-%d %H:%M:S")
 
-    def store(self):
-        self.cursor.execute('INSERT INTO BOOKS VALUES(?, ?, ?, ?, NULL)',
-                            (self.title, self.autor, self.read, self.date))
-        print("Book(title = %s, autor = %s, read = %s was successfully stored!)" % (self.title, self.autor, self.read))
-        self.connection.commit()
-
     def find(self):
         row = self.cursor.execute('SELECT rowid, title, autor, isRead FROM BOOKS WHERE title = ? and autor = ? and isRead = ?',
                                   (self.title, self.autor, self.read)).fetchone()
@@ -29,6 +23,12 @@ class Book:
             return True
         else:
             return False
+
+    def create(self):
+        self.cursor.execute('INSERT INTO BOOKS VALUES(?, ?, ?, ?, NULL)',
+                            (self.title, self.autor, self.read, self.date))
+        print("Book(title = %s, autor = %s, read = %s was successfully stored!)" % (self.title, self.autor, self.read))
+        self.connection.commit()
 
     def update(self):
         row = self.cursor.execute('SELECT rowid, title, autor, isRead FROM BOOKS WHERE title = ? and autor = ?',
@@ -79,7 +79,7 @@ def storeindb(books):
         row = c.execute('SELECT rowid, title, autor, isRead FROM BOOKS WHERE title = ? and autor = ?',
                         (book.title, book.autor)).fetchone()
         if row is None:
-            book.store()
+            book.create()
         else:
             print('Book with title = \'%s\' and autor = \'%s\' already exists!' % (book.title, book.autor))
     Book.close()
